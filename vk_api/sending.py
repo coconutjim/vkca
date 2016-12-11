@@ -13,8 +13,8 @@ POSTING_GIF_TIMEOUT = 10
 
 def send_plain_message(user_id, text):
     log('sending text...')
-    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text)
     method_url = 'https://api.vk.com/method/messages.send?'
+    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text)
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
@@ -30,8 +30,8 @@ def load_img(img_url):
 
     log('getting upload server for image...')
     method_url = 'https://api.vk.com/method/photos.getWallUploadServer?'
-    data = dict(access_token=VK_ANSWERING_TOKEN, gid=VK_ATTACHMENTS_COMMUNITY_ID)
-    response = requests.post(method_url, data)
+    params = dict(access_token=VK_ANSWERING_TOKEN, gid=VK_ATTACHMENTS_COMMUNITY_ID)
+    response = requests.get(method_url, params=params)
     result = json.loads(response.text)
     upload_url = result['response']['upload_url']
 
@@ -52,8 +52,8 @@ def load_img(img_url):
 def send_message_image(user_id, text, img_url):
     img_name = load_img(img_url)
     log('sending image...')
-    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text, attachment=img_name)
     method_url = 'https://api.vk.com/method/messages.send?'
+    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text, attachment=img_name)
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
@@ -93,8 +93,8 @@ def load_gif(gif_url):
 def send_message_gif(user_id, text, gif_url):
     gif_name = load_gif(gif_url)
     log('sending gif...')
-    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text, attachment=gif_name)
     method_url = 'https://api.vk.com/method/messages.send?'
+    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text, attachment=gif_name)
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
@@ -105,8 +105,8 @@ def send_message_gif(user_id, text, gif_url):
 
 def send_message_music(user_id, text, audio_name):
     log('sending audio...')
-    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text, attachment=audio_name)
     method_url = 'https://api.vk.com/method/messages.send?'
+    data = dict(access_token=VK_ANSWERING_TOKEN, user_id=user_id, message=text, attachment=audio_name)
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:

@@ -48,8 +48,8 @@ def gif_by_query(query):
 def music_by_query(query):
     log('getting audio name...')
     method_url = 'https://api.vk.com/method/audio.search'
-    data = dict(access_token=VK_SEARCHING_TOKEN, q=query)
-    response = requests.post(method_url, data)
+    params = dict(access_token=VK_SEARCHING_TOKEN, q=query)
+    response = requests.post(method_url, params=params)
     result = json.loads(response.text)['response']
     if result[0] == 0:
         log('no audio "' + query + '" found')
@@ -62,8 +62,8 @@ def music_by_query(query):
 def video_by_query(query):
     log('getting video name...')
     method_url = 'https://api.vk.com/method/video.search'
-    data = dict(access_token=VK_SEARCHING_TOKEN, q=query, adult='1')
-    response = requests.post(method_url, data)
+    params = dict(access_token=VK_SEARCHING_TOKEN, q=query, adult='1')
+    response = requests.get(method_url, params=params)
     result = json.loads(response.text)['response']
     if len(result) == 0:
         log('no video "' + query + '" found')
