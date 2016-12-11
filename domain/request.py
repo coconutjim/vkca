@@ -3,8 +3,7 @@ __author__ = 'Lev'
 
 class Request:
 
-    def __init__(self, message_id, user_id, date, text):
-        self.message_id = message_id
+    def __init__(self, user_id, date, text):
         self.user_id = user_id
         self.date = date
         self.text = text
@@ -18,3 +17,6 @@ class Request:
 
     def complete(self):
         pass
+
+    def __repr__(self):
+        return '<Request uid:{} date:{} text:{}>'.format(self.user_id, self.date, self.text)
