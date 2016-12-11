@@ -4,7 +4,7 @@ import requests
 import json
 
 from domain.request import Request
-from domain.request_factory import build_error_frequency_request
+from domain.request_factory import build_error_frequency_request, build_error_duplicate_request
 from settings import VK_LISTENING_TOKEN
 from util import log
 from config import user_attempts, user_spam_warnings, answers_queue
@@ -38,11 +38,11 @@ def process_long_polling_results(updates):
         # fuck magic numbers
         if update[0] == 4 and not (update[2] & 2) and update[3] < 2000000000:
             user_id = update[3]
+            text = update[6]
             messages.append(update)
             if user_id not in user_attempts:
-                user_attempts[user_id] = 1
-            else:
-                user_attempts[user_id] += 1
+                user_attempts[user_id] = []
+            user_attempts[user_id].append(text)
 
     if len(messages) == 0:
         return messages
@@ -54,13 +54,20 @@ def process_long_polling_results(updates):
         user_id = message[3]
         date = message[4]
         text = message[6]
-        if user_attempts[user_id] > 3:
+        attempts = user_attempts[user_id]
+        if len(attempts) > 3:
             if user_id not in user_spam_warnings:
-                log('detected spam from user {}, adding spam warning...'.format(user_id))
+                log('detected spam (frequent) from user {}, adding spam warning...'.format(user_id))
                 user_spam_warnings[user_id] = True
                 answers_queue.put(build_error_frequency_request(user_id, date))
         else:
-            reqs.append(Request(user_id, date, text))
+            if len(attempts) != len(set(attempts)):
+                if user_id not in user_spam_warnings:
+                    log('detected spam (duplicate) from user {}, adding spam warning...'.format(user_id))
+                    user_spam_warnings[user_id] = True
+                    answers_queue.put(build_error_duplicate_request(user_id, date))
+            else:
+                reqs.append(Request(user_id, date, text))
     return reqs
 
 

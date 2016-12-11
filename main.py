@@ -2,7 +2,7 @@ __author__ = 'Lev'
 
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor
-from threading import Thread, Timer
+from threading import Thread
 
 from vk_api.listening import get_long_poll_server, long_polling, process_long_polling_results
 from vk_api.sending import send_plain_message
@@ -43,6 +43,12 @@ def answers_worker():
         i += 1
 
 
+def process_requests(pool, data):
+    reqs = process_long_polling_results(data)
+    for req in reqs:
+        pool.submit(mock_processor, req)
+
+
 def main():
     answers_thread = Thread(target=answers_worker)
     answers_thread.setDaemon(True)
@@ -61,10 +67,7 @@ def main():
             server, key, new_ts_unused = get_long_poll_server()
         else:
             ts = result['ts']
-            reqs = process_long_polling_results(result['updates'])
-            for req in reqs:
-                pass
-                pool.submit(mock_processor, req)
+            pool.submit(process_requests, pool, result['updates'])
 
 
 if __name__ == '__main__':
