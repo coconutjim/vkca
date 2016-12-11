@@ -11,9 +11,11 @@ from util import log
 from config import answers_queue, user_attempts, user_spam_warnings
 
 
-def clear_user_attempts():
-    user_attempts.clear()
-    user_spam_warnings.clear()
+def user_attempts_worker():
+    while True:
+        sleep(5)
+        user_attempts.clear()
+        user_spam_warnings.clear()
 
 
 def answers_worker():
@@ -42,10 +44,14 @@ def answers_worker():
 
 
 def main():
-    pool = ThreadPoolExecutor(10)
     answers_thread = Thread(target=answers_worker)
+    answers_thread.setDaemon(True)
     answers_thread.start()
-    Timer(5, clear_user_attempts).start()
+    user_attempts_thread = Thread(target=user_attempts_worker)
+    user_attempts_thread.setDaemon(True)
+    user_attempts_thread.start()
+
+    pool = ThreadPoolExecutor(10)
     server, key, ts = get_long_poll_server()
 
     while True:
