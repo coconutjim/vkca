@@ -18,7 +18,7 @@ def send_plain_message(user_id, text):
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
-        error = 'sending error: ' + str(result['error']['error_code']) + ' ' + result['error']['error_msg']
+        error = 'sending error({}): {}'.format(result['error']['error_code'], result['error']['error_msg'])
         raise Exception(error)
     log('sent text...')
 
@@ -57,7 +57,7 @@ def send_message_image(user_id, text, img_url):
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
-        error = 'sending error: ' + str(result['error']['error_code']) + ' ' + result['error']['error_msg']
+        error = 'sending error({}): {}'.format(result['error']['error_code'], result['error']['error_msg'])
         raise Exception(error)
     log('sent image...')
 
@@ -98,7 +98,7 @@ def send_message_gif(user_id, text, gif_url):
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
-        error = 'sending error: ' + str(result['error']['error_code']) + ' ' + result['error']['error_msg']
+        error = 'sending error({}): {}'.format(result['error']['error_code'], result['error']['error_msg'])
         raise Exception(error)
     log('sent gif...')
 
@@ -110,7 +110,7 @@ def send_message_music(user_id, text, audio_name):
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
-        error = 'sending error: ' + str(result['error']['error_code']) + ' ' + result['error']['error_msg']
+        error = 'sending error({}): {}'.format(result['error']['error_code'], result['error']['error_msg'])
         raise Exception(error)
     log('sent audio...')
 
@@ -122,6 +122,6 @@ def send_message_video(user_id, text, video_name):
     response = requests.post(method_url, data)
     result = json.loads(response.text)
     if 'error' in result:
-        error = 'sending error: ' + str(result['error']['error_code']) + ' ' + result['error']['error_msg']
+        error = 'sending error({}): {}'.format(result['error']['error_code'], result['error']['error_msg'])
         raise Exception(error)
     log('sent video...')
