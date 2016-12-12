@@ -7,17 +7,16 @@ from domain.request import Request
 from domain.user import User
 
 
-dbconfig = {
-    'host': DB_HOST,
-    'user': DB_USER,
-    'database': DB_NAME,
-    'password': DB_PASSWORD
-}
-
 MYSQL_POOL = None
 
 
-def init():
+def initMySQLPool():
+    dbconfig = {
+        'host': DB_HOST,
+        'user': DB_USER,
+        'database': DB_NAME,
+        'password': DB_PASSWORD
+    }
     global MYSQL_POOL
     MYSQL_POOL = MySQLConnectionPool(pool_name='my_pool', pool_size=30, **dbconfig)
 

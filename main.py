@@ -4,6 +4,7 @@ from time import sleep
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 
+from db.db_methods import initMySQLPool
 from vk_api.listening import get_long_poll_server, long_polling, process_long_polling_results
 from vk_api.sending import send_plain_message
 from processing.processor import mock_processor
@@ -50,6 +51,7 @@ def process_requests(pool, data):
 
 
 def main():
+    initMySQLPool()
     answers_thread = Thread(target=answers_worker)
     answers_thread.setDaemon(True)
     answers_thread.start()
