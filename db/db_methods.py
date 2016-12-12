@@ -59,14 +59,6 @@ def update_user_locale(conn, user_id, locale):
         conn.commit()
 
 
-def get_last_user_request_time(conn, user_id):
-    cursor = conn.cursor()
-    query = "select ReqTime from Request where UserID = '{}' order by Reqtime desc limit 1".format(user_id)
-    cursor.execute(query)
-    result = cursor.fetchone()
-    return None if result is None else result[0]
-
-
 def save_user(conn, user):
     cursor = conn.cursor()
     # consider that it can be datetime, not date here, but db processes it
@@ -93,16 +85,6 @@ def save_request(conn, request):
         .format(request.dt, type_id, request.user_id, request.success, log_id, request.session_id)
     cursor.execute(query)
     conn.commit()
-
-
-def create_session(conn, dt):
-    cursor = conn.cursor()
-    query = "insert into Session (StartTime) values ('{}')".format(dt)
-    cursor.execute(query)
-    ses_id = cursor.lastrowid
-    conn.commit()
-    return ses_id
-
 
 
 def get_all_users(conn):

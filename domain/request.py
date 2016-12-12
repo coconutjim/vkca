@@ -27,7 +27,6 @@ class Request:
         self.attachment = ''
         self.success = False
         self.error_message = ''
-        self.session_id = 0
 
     def complete(self):
         pass
