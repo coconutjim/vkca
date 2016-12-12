@@ -16,7 +16,7 @@ categories = dict(main='https://news.yandex.ru/index.rss',
 
 def news_by_category(category):
     response = requests.get(categories[category])
-    soup = Soup(response.text, features='xml')
+    soup = Soup(response.text, features='lxml')
     res = ''
     for item in soup.find_all('item'):
         res += item.find('title').text + '\n'
@@ -29,7 +29,7 @@ def default_news():
 
 def news_by_query(query):
     response = requests.get(categories['main'])
-    soup = Soup(response.text, features='xml')
+    soup = Soup(response.text, features='lxml')
     res = ''
     for item in soup.find_all('item'):
         title = item.find('title').text
@@ -37,6 +37,9 @@ def news_by_query(query):
         if query in title or query in description:
             res += title + '\n'
     return res[:-1]
+
+
+print default_news()
 
 
 
