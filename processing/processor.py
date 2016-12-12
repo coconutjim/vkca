@@ -21,8 +21,7 @@ def mock_processor(req):
         return
     text = text.lower()
 
-    req.type = 33333
-    req.category = 'test'
+    req.type = ''
     req.attachment = ''
 
     try:

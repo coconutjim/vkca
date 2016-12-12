@@ -52,22 +52,22 @@ def process_long_polling_results(updates):
     for message in messages:
         # fuck magic numbers
         user_id = message[3]
-        date = message[4]
+        dt = message[4]
         text = message[6]
         attempts = user_attempts[user_id]
         if len(attempts) > 3:
             if user_id not in user_spam_warnings:
                 log('detected spam (frequent) from user {}, adding spam warning...'.format(user_id))
                 user_spam_warnings[user_id] = True
-                answers_queue.put(build_error_frequency_request(user_id, date))
+                answers_queue.put(build_error_frequency_request(user_id, dt))
         else:
             if len(attempts) != len(set(attempts)):
                 if user_id not in user_spam_warnings:
                     log('detected spam (duplicate) from user {}, adding spam warning...'.format(user_id))
                     user_spam_warnings[user_id] = True
-                    answers_queue.put(build_error_duplicate_request(user_id, date))
+                    answers_queue.put(build_error_duplicate_request(user_id, dt))
             else:
-                reqs.append(Request(user_id, date, text))
+                reqs.append(Request(user_id, dt, text))
     return reqs
 
 

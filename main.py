@@ -6,7 +6,7 @@ from threading import Thread
 
 from vk_api.listening import get_long_poll_server, long_polling, process_long_polling_results
 from vk_api.sending import send_plain_message
-from processing.parser import mock_processor
+from processing.processor import mock_processor
 from util import log
 from config import answers_queue, user_attempts, user_spam_warnings
 
