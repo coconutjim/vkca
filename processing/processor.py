@@ -15,7 +15,9 @@ from settings import WORD_KEY
 
 def mock_processor(req):
     # write user to db if needed
-    # process empty body
+    # process empty or large body
+    # get locale
+    # check session
     text = req.text
     if text is None or text == '':
         return
