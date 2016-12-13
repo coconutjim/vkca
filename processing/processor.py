@@ -3,10 +3,10 @@ __author__ = 'Lev'
 
 import re
 
-from vk_api.sending import send_plain_message, send_message_music
+from vk_api.sending import send_plain_message, send_message_music, send_message_video
 from source_api.news_api import default_news, news_by_category, news_by_query
 from source_api.weather_api import default_weather
-from source_api.media_api import music_by_query
+from source_api.media_api import music_by_query, video_by_query
 
 
 from resources import MAX_REQUEST_LENGTH
@@ -115,7 +115,7 @@ def parse_eng_request(req, text):
             req.complete = send_plain_message(req.user_id, req.response_text)
             answers_queue.put(req)
             return
-        if u'music' in text:
+        if 'music' in text:
             req.category = 'Music'
             req.type = 'Query'
             req.save = True
@@ -141,6 +141,34 @@ def parse_eng_request(req, text):
             else:
                 req.response_text = music
                 req.complete = send_message_music(req.user_id, '', music)
+            answers_queue.put(req)
+            return
+        if 'video' in text:
+            req.category = 'Video'
+            req.type = 'Query'
+            req.save = True
+            if text.count('&quot;') != 2:
+                req.success = 0
+                req.response_text = 'Please check request correctness. Query must be in quotes'
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+            found = re.findall('&quot;([^"]*)&quot;', text)
+            if found is None or len(found) == 0 or found[0] == '':
+                req.success = 0
+                req.response_text = 'Please check request correctness. Query must be in quotes'
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+            query = found[0]
+            req.success = 1
+            video = video_by_query(query)
+            if video is None:
+                req.response_text = 'Nothing found by "{}"'.format(query)
+                req.complete = send_plain_message(req.user_id, req.response_text)
+            else:
+                req.response_text = video
+                req.complete = send_message_video(req.user_id, '', video)
             answers_queue.put(req)
             return
         if 'change language' in text:
@@ -266,6 +294,36 @@ def parse_ru_request(req, text):
             else:
                 req.response_text = music
                 req.complete = send_message_music(req.user_id, '', music)
+            answers_queue.put(req)
+            return
+        if u'видео' in text:
+            req.category = 'Video'
+            req.type = 'Query'
+            req.save = True
+            if text.count('&quot;') != 2:
+                req.success = 0
+                req.response_text = u'Пожалуйста, проверьте правильность написания команды. ' \
+                                    u'Запрос должен быть в кавычках'
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+            found = re.findall('&quot;([^"]*)&quot;', text)
+            if found is None or len(found) == 0 or found[0] == '':
+                req.success = 0
+                req.response_text = u'Пожалуйста, проверьте правильность написания команды. ' \
+                                    u'Запрос должен быть в кавычках'
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+            query = found[0]
+            req.success = 1
+            video = video_by_query(query)
+            if video is None:
+                req.response_text = u'К сожалению, по запросу "{}" ничего не найдено'.format(query)
+                req.complete = send_plain_message(req.user_id, req.response_text)
+            else:
+                req.response_text = video
+                req.complete = send_message_video(req.user_id, '', video)
             answers_queue.put(req)
             return
         if u'смена языка' in text:
