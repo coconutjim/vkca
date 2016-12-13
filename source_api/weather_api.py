@@ -1,3 +1,4 @@
+# coding: utf8
 __author__ = 'Lev'
 
 import requests
@@ -8,10 +9,12 @@ from settings import WEATHER_KEY
 
 API_URL = 'http://api.wunderground.com/api/' + WEATHER_KEY
 
+weather_locale_dict = dict(ru='RU', eng='ENG')
+
 
 # consider errors sometimes
-def default_weather():
-    response = requests.get(API_URL + '/forecast/lang:RU/q/Russia/Moscow.json')
+def default_weather(locale):
+    response = requests.get(API_URL + '/forecast/lang:{}/q/Russia/Moscow.json'.format(weather_locale_dict[locale]))
     result = json.loads(response.text)['forecast']['txt_forecast']
     res = ''
     for period in result['forecastday']:

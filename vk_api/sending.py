@@ -1,3 +1,4 @@
+# coding: utf8
 __author__ = 'Lev'
 
 import requests
@@ -125,3 +126,4 @@ def send_message_video(user_id, text, video_name):
         error = 'sending error({}): {}'.format(result['error']['error_code'], result['error']['error_msg'])
         raise Exception(error)
     log('sent video...')
+

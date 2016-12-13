@@ -1,3 +1,4 @@
+# coding: utf8
 __author__ = 'Lev'
 
 from Queue import Queue
@@ -8,4 +9,6 @@ answers_queue = Queue()
 
 user_attempts = dict()
 user_spam_warnings = dict()
+
+MYSQL_POOL = None
 

@@ -1,3 +1,4 @@
+# coding: utf8
 __author__ = 'Lev'
 
 import datetime
@@ -11,7 +12,7 @@ class Request:
         if not isinstance(user_id, int):
             raise ValueError('request constructor error: bad user id')
         if isinstance(dt, int):
-            dt = datetime.datetime.fromtimestamp(dt).date()
+            dt = datetime.datetime.fromtimestamp(dt)
         if not isinstance(dt, datetime.datetime):
             raise ValueError('request constructor error: bad datetime')
         text = str(text)
@@ -22,11 +23,12 @@ class Request:
         self.dt = dt
         self.text = text
 
-        self.type = ''
+        self.category = 'undefined'
+        self.type = 'undefined'
         self.response_text = ''
-        self.attachment = ''
-        self.success = False
+        self.success = 0
         self.error_message = ''
+        self.save = False
 
     def complete(self):
         pass

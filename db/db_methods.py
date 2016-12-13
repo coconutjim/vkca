@@ -1,24 +1,23 @@
+# coding: utf8
 __author__ = 'Lev'
 
 from mysql.connector.pooling import MySQLConnectionPool
 
 from settings import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+import config
 from domain.request import Request
 from domain.user import User
 
 
-MYSQL_POOL = None
 
-
-def initMySQLPool():
+def init_mysql_pool():
     dbconfig = {
         'host': DB_HOST,
         'user': DB_USER,
         'database': DB_NAME,
         'password': DB_PASSWORD
     }
-    global MYSQL_POOL
-    MYSQL_POOL = MySQLConnectionPool(pool_name='my_pool', pool_size=30, **dbconfig)
+    config.MYSQL_POOL= MySQLConnectionPool(pool_name='my_pool', pool_size=30, **dbconfig)
 
 
 def check_user_existence(conn, user_id):
@@ -71,18 +70,19 @@ def save_user(conn, user):
 
 def save_request(conn, request):
     cursor = conn.cursor()
-    query = "select id from Type where TypeName = '{}' limit 1".format(request.type)
+    query = "select id from Type where TypeName = '{}' and CategoryName = '{}' limit 1"\
+        .format(request.type, request.category)
     cursor.execute(query)
     result = cursor.fetchone()
     if result is None:
-        raise Exception('db error: type {} was not found!'.format(request.type))
+        raise Exception('db error: type {} {} was not found!'.format(request.type, request.category))
     type_id = result[0]
-    query = "insert into Log (ErrorMessage, Text, ResponseText) values ('{}', '{}', '{}')"\
+    query = "insert into Log (ErrorMessage, Text, Response) values ('{}', '{}', '{}')"\
         .format(request.error_message, request.text, request.response_text)
     cursor.execute(query)
     log_id = cursor.lastrowid
-    query = "insert into Request (ReqTime, TypeID, UserID, IsSuccess, LogId, SessionID)"\
-        .format(request.dt, type_id, request.user_id, request.success, log_id, request.session_id)
+    query = "insert into Request (ReqTime, TypeID, UserID, IsSuccess, LogId) values ('{}', '{}', '{}', '{}', '{}')"\
+        .format(request.dt, type_id, request.user_id, request.success, log_id)
     cursor.execute(query)
     conn.commit()
 
@@ -104,11 +104,24 @@ def get_all_requests(conn):
     for req in reqs:
         print req
 
+
 '''
 print 1
-init()
+init_mysql_pool()
 print 2
-conn = MYSQL_POOL.get_connection()
-get_all_users(conn)
+import config
+conn = config.MYSQL_POOL.get_connection()
+cursor = conn.cursor()
+query = "insert into Type (CategoryName, TypeName) values ('{}','{}')".format('Music', 'Query')
+cursor.execute(query)
+conn.commit()
+
+
+query = 'select * from Type'
+cursor.execute(query)
+print cursor.fetchall()
 conn.close()
 '''
+
+
+
