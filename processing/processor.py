@@ -4,7 +4,7 @@ __author__ = 'Lev'
 import re
 
 from vk_api.sending import send_plain_message, send_message_music
-from source_api.news_api import default_news
+from source_api.news_api import default_news, news_by_category, news_by_query
 from source_api.weather_api import default_weather
 from source_api.media_api import music_by_query
 
@@ -20,7 +20,7 @@ import config
 help_text_ru = u'Вы работаете с Content Aggregator. Список доступных команд:\n' \
                u'Новости\n' \
                u'Новости "запрос"\n' \
-               u'Новости "категория"\n' \
+               u'Новости "категория" (политика, экономика, происшествия, спорт, наука, культура, религия)\n' \
                u'Погода"\n' \
                u'Погода "день"\n' \
                u'Погода "город"\n' \
@@ -37,7 +37,7 @@ help_text_ru = u'Вы работаете с Content Aggregator. Список д�
 help_text_eng = 'You are dealing with Content Aggregator. List of available commands:\n' \
                'News' \
                'News "query"\n' \
-               'News "category"\n' \
+               'News "category" (politics, economics, incidents, sport, science, culture, religion)\n' \
                'Weather"\n' \
                'Weather "day"\n' \
                'Weather "city"\n' \
@@ -50,6 +50,12 @@ help_text_eng = 'You are dealing with Content Aggregator. List of available comm
                'Video "query"\n' \
                'Change language\n' \
                'Help'
+
+
+news_cats_dict_eng = dict(politics='Politics', economics='Economics', incidents='Incidents', sport='Sport',
+                      science='Science', culture='Culture', religion='Religion')
+news_cats_dict_ru = {u'политика':'Politics', u'экономика': 'Economics', u'происшествия':'Incidents',
+                     u'спорт':'Sport', u'наука':'Science', u'культура': 'Culture', u'религия':'Religion'}
 
 
 def parse_eng_request(req, text):
@@ -74,11 +80,39 @@ def parse_eng_request(req, text):
             return
         if 'news' in text:
             req.category = 'News'
+            req.save = True
+
+            if text.count('&quot;') == 2:
+                found = re.findall('&quot;([^"]*)&quot;', text)
+                if found is None or len(found) == 0 or found[0] == '':
+                    req.type = 'Query'
+                    req.success = 0
+                    req.response_text = 'Please check request correctness. Query must be in quotes'
+                    req.complete = send_plain_message(req.user_id, req.response_text)
+                    answers_queue.put(req)
+                    return
+                query = found[0]
+                if query in news_cats_dict_eng:
+                    req.type = news_cats_dict_eng[query]
+                    req.success = 1
+                    req.response_text = news_by_category(req.type, locale='eng')
+                    req.complete = send_plain_message(req.user_id, req.response_text)
+                    answers_queue.put(req)
+                    return
+                req.type = 'Query'
+                req.success = 1
+                res = news_by_query(query, locale='eng')
+                if res == '':
+                    res = 'Nothing found by "{}"'.format(query)
+                req.response_text = res
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+
             req.type = 'All'
             req.response_text = default_news('eng')
-            req.success = 1
+
             req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
             answers_queue.put(req)
             return
         if u'music' in text:
@@ -168,11 +202,40 @@ def parse_ru_request(req, text):
             return
         if u'новости' in text:
             req.category = 'News'
+            req.save = True
+
+            if text.count('&quot;') == 2:
+                found = re.findall('&quot;([^"]*)&quot;', text)
+                if found is None or len(found) == 0 or found[0] == '':
+                    req.type = 'Query'
+                    req.success = 0
+                    req.response_text = u'Пожалуйста, проверьте правильность написания команды. ' \
+                                        u'Запрос должен быть в кавычках'
+                    req.complete = send_plain_message(req.user_id, req.response_text)
+                    answers_queue.put(req)
+                    return
+                query = found[0]
+                if query in news_cats_dict_ru:
+                    req.type = news_cats_dict_ru[query]
+                    req.success = 1
+                    req.response_text = news_by_category(req.type)
+                    req.complete = send_plain_message(req.user_id, req.response_text)
+                    answers_queue.put(req)
+                    return
+                req.type = 'Query'
+                req.success = 1
+                res = news_by_query(query)
+                if res == '':
+                    res = u'К сожалению, по запросу "{}" ничего не найдено'.format(query)
+                req.response_text = res
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+
             req.type = 'All'
             req.response_text = default_news()
-            req.success = 1
+
             req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
             answers_queue.put(req)
             return
         if u'музыка' in text:

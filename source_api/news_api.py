@@ -7,28 +7,28 @@ import requests
 from util import log
 import json
 
-categories = dict(main='https://news.yandex.ru/index.rss',
-                  politics='https://news.yandex.ru/politics.rss',
-                  economics='https://news.yandex.ru/business.rss',
-                  incidents='https://news.yandex.ru/incident.rss',
-                  sport='https://news.yandex.ru/sport.rss',
-                  science='https://news.yandex.ru/science.rss',
-                  culture='https://news.yandex.ru/culture.rss',
-                  religion='https://news.yandex.ru/religion.rss')
+categories = dict(Main='https://news.yandex.ru/index.rss',
+                  Politics='https://news.yandex.ru/politics.rss',
+                  Economics='https://news.yandex.ru/business.rss',
+                  Incidents='https://news.yandex.ru/incident.rss',
+                  Sport='https://news.yandex.ru/sport.rss',
+                  Science='https://news.yandex.ru/science.rss',
+                  Culture='https://news.yandex.ru/culture.rss',
+                  Religion='https://news.yandex.ru/religion.rss')
 
 
-def news_by_category(category):
+def news_by_category(category, locale='ru'):
     response = requests.get(categories[category])
     soup = Soup(response.text, features='lxml')
     res = ''
     for item in soup.find_all('item'):
         res += item.find('title').text + '\n'
-    return res[:-1]
+    res = res[:-1]
+    return translate_text(res) if locale == 'eng' else res
 
 
 def default_news(locale='ru'):
-    n = news_by_category('main')
-    return translate_text(n) if locale == 'eng' else n
+    return news_by_category('Main', locale=locale)
 
 
 def translate_text(text):
@@ -41,16 +41,20 @@ def translate_text(text):
     return translation
 
 
-def news_by_query(query):
-    response = requests.get(categories['main'])
-    soup = Soup(response.text, features='lxml')
+def news_by_query(query, locale='ru'):
     res = ''
-    for item in soup.find_all('item'):
-        title = item.find('title').text
-        description = item.find('description').text
-        if query in title or query in description:
-            res += title + '\n'
-    return res[:-1]
+    for k, v in categories.iteritems():
+        response = requests.get(v)
+        soup = Soup(response.text, features='lxml')
+        for item in soup.find_all('item'):
+            title = item.find('title').text
+            description = item.find('description').text
+            if query in title.lower() or query in description.lower():
+                res += title + '\n'
+    if res == '':
+        return ''
+    res = res[:-1]
+    return translate_text(res) if locale == 'eng' else res
 
 
 
