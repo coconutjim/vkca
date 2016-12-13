@@ -61,7 +61,11 @@ def update_user_locale(conn, user_id, locale):
 def save_user(conn, user):
     cursor = conn.cursor()
     # consider that it can be datetime, not date here, but db processes it
-    query = "insert into User (UserID, FullName, BirthDate, Gender, RegDate) values \
+    if user.birth_date is None:
+        query = "insert into User (UserID, FullName, BirthDate, Gender, RegDate) values \
+                ({}, '{}', {}, '{}', '{}')".format(user.user_id, user.full_name, 'NULL', user.gender, user.reg_date)
+    else:
+        query = "insert into User (UserID, FullName, BirthDate, Gender, RegDate) values \
         ({}, '{}', '{}', '{}', '{}')".format(user.user_id, user.full_name, user.birth_date,
                                      user.gender, user.reg_date)
     cursor.execute(query)
