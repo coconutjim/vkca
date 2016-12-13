@@ -269,8 +269,6 @@ def process(req):
     else:
         parse_ru_request(req, text)
 
-    answers_queue.put(req)
-
 
 
 
