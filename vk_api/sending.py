@@ -8,8 +8,8 @@ from StringIO import StringIO
 from settings import VK_ANSWERING_TOKEN, VK_ATTACHMENTS_COMMUNITY_ID
 from util import log
 
-POSTING_IMG_TIMEOUT = 10
-POSTING_GIF_TIMEOUT = 10
+POSTING_IMG_TIMEOUT = 20
+POSTING_GIF_TIMEOUT = 20
 
 
 def send_plain_message(user_id, text):

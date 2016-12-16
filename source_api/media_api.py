@@ -5,7 +5,8 @@ import requests
 import json
 import random
 
-from settings import VK_SEARCHING_TOKEN, GCS_KEY, GCS_ID,GIPHY_KEY
+from settings import VK_SEARCHING_TOKEN, GCS_KEY, GCS_ID, GIPHY_KEY
+from api_utils import translate_text
 from util import log
 
 
@@ -29,6 +30,7 @@ def image_by_query(query):
 
 
 def gif_by_query(query):
+    query = translate_text(query)
     log('getting gif utl...')
     url = 'http://api.giphy.com/v1/gifs/search?api_key=' + GIPHY_KEY + '&q=' + query
     response = requests.get(url)

@@ -3,11 +3,12 @@ __author__ = 'Lev'
 
 import re
 
-from vk_api.sending import send_plain_message, send_message_music, send_message_video
+from vk_api.sending import send_plain_message, send_message_image, send_message_gif, \
+    send_message_music, send_message_video
 from source_api.news_api import default_news, news_by_category, news_by_query
 from source_api.weather_api import default_weather, hourly_weather
 from source_api.finance_api import default_currencies, currencies_by_query, currencies_list
-from source_api.media_api import music_by_query, video_by_query
+from source_api.media_api import image_by_query, gif_by_query, music_by_query, video_by_query
 
 
 from resources import MAX_REQUEST_LENGTH
@@ -63,10 +64,12 @@ news_cats_dict = dict(ru=news_cats_dict_ru, eng=news_cats_dict_eng)
 
 
 stopwords_dict_eng = dict(help='help', news='news', weather='weather', hourly='hourly', currencies='currencies',
-                          list='list', music='music', video='video', locale='change language')
+                          list='list', image='image', gif='gif', music='music', video='video',
+                          locale='change language')
 
 stopwords_dict_ru = dict(help=u'помощь', news=u'новости', weather=u'погода', hourly=u'почасовая', currencies=u'валюты',
-                         list=u'список', music=u'музыка', video=u'видео', locale=u'смена языка')
+                         list=u'список', image=u'картинка', gif=u'гиф', music=u'музыка', video=u'видео',
+                         locale=u'смена языка')
 
 stopwords_dict = dict(ru=stopwords_dict_ru, eng=stopwords_dict_eng)
 
@@ -108,7 +111,7 @@ def parse_request(req, text, locale='ru'):
             req.category = 'News'
             if text.count('&quot;') == 2:
                 found = re.findall('&quot;([^"]*)&quot;', text)
-                if found is None or len(found) == 0 or found[0] == '':
+                if found is None or len(found) == 0 or found[0] == '' or found[0] == ' ':
                     req.type = 'Query'
                     process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                     return
@@ -155,7 +158,7 @@ def parse_request(req, text, locale='ru'):
             if text.count('&quot;') == 2:
                 req.type = 'Currencies_query'
                 found = re.findall('&quot;([^"]*)&quot;', text)
-                if found is None or len(found) == 0 or found[0] == '':
+                if found is None or len(found) == 0 or found[0] == '' or found[0] == ' ':
                     process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                     return
                 query = found[0]
@@ -171,6 +174,46 @@ def parse_request(req, text, locale='ru'):
             req.complete = send_plain_message(req.user_id, req.response_text)
             answers_queue.put(req)
             return
+        if sws['image'] in text:
+            req.category = 'Image'
+            req.type = 'Query'
+            if text.count('&quot;') != 2:
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'incorrect query')
+                return
+            found = re.findall('&quot;([^"]*)&quot;', text)
+            if found is None or len(found) == 0 or found[0] == '' or found[0] == ' ':
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
+                return
+            query = found[0]
+            image = image_by_query(query)
+            if image is None:
+                req.response_text = not_found_message_dict[locale].format(query)
+                req.complete = send_plain_message(req.user_id, req.response_text)
+            else:
+                req.response_text = image
+                req.complete = send_message_image(req.user_id, '', image)
+            answers_queue.put(req)
+            return
+        if sws['gif'] in text:
+            req.category = 'Gif'
+            req.type = 'Query'
+            if text.count('&quot;') != 2:
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'incorrect query')
+                return
+            found = re.findall('&quot;([^"]*)&quot;', text)
+            if found is None or len(found) == 0 or found[0] == '' or found[0] == ' ':
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
+                return
+            query = found[0]
+            gif = gif_by_query(query)
+            if gif is None:
+                req.response_text = not_found_message_dict[locale].format(query)
+                req.complete = send_plain_message(req.user_id, req.response_text)
+            else:
+                req.response_text = gif
+                req.complete = send_message_gif(req.user_id, '', gif)
+            answers_queue.put(req)
+            return
         if sws['music'] in text:
             req.category = 'Music'
             req.type = 'Query'
@@ -178,7 +221,7 @@ def parse_request(req, text, locale='ru'):
                 process_unsuccessful_req(req, quotes_message_dict[locale], 'incorrect query')
                 return
             found = re.findall('&quot;([^"]*)&quot;', text)
-            if found is None or len(found) == 0 or found[0] == '':
+            if found is None or len(found) == 0 or found[0] == '' or found[0] == ' ':
                 process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                 return
             query = found[0]
@@ -198,7 +241,7 @@ def parse_request(req, text, locale='ru'):
                 process_unsuccessful_req(req, quotes_message_dict[locale], 'incorrect query')
                 return
             found = re.findall('&quot;([^"]*)&quot;', text)
-            if found is None or len(found) == 0 or found[0] == '':
+            if found is None or len(found) == 0 or found[0] == '' or found[0] == ' ':
                 process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                 return
             query = found[0]
