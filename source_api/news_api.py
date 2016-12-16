@@ -2,10 +2,11 @@
 __author__ = 'Lev'
 
 from bs4 import BeautifulSoup as Soup
-from settings import YANDEX_TRANSLATE_KEY
 import requests
+
+
+from api_utils import translate_text
 from util import log
-import json
 
 categories = dict(Main='https://news.yandex.ru/index.rss',
                   Politics='https://news.yandex.ru/politics.rss',
@@ -18,12 +19,14 @@ categories = dict(Main='https://news.yandex.ru/index.rss',
 
 
 def news_by_category(category, locale='ru'):
+    log("getting news '{}'...".format(category))
     response = requests.get(categories[category])
     soup = Soup(response.text, features='lxml')
     res = ''
     for item in soup.find_all('item'):
         res += item.find('title').text + '\n'
     res = res[:-1]
+    log('got news...')
     return translate_text(res) if locale == 'eng' else res
 
 
@@ -31,17 +34,8 @@ def default_news(locale='ru'):
     return news_by_category('Main', locale=locale)
 
 
-def translate_text(text):
-    log('translating text...')
-    data = dict(key=YANDEX_TRANSLATE_KEY, lang='en', text=text)
-    method_url = 'https://translate.yandex.net/api/v1.5/tr.json/translate?'
-    response = requests.post(method_url, data)
-    translation = json.loads(response.text)['text'][0]
-    log('translated text...')
-    return translation
-
-
 def news_by_query(query, locale='ru'):
+    log("getting news '{}'...".format(query))
     res = ''
     for k, v in categories.iteritems():
         response = requests.get(v)
@@ -54,6 +48,7 @@ def news_by_query(query, locale='ru'):
     if res == '':
         return ''
     res = res[:-1]
+    log('got news...')
     return translate_text(res) if locale == 'eng' else res
 
 
