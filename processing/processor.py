@@ -6,7 +6,7 @@ import re
 from vk_api.sending import send_plain_message, send_message_music, send_message_video
 from source_api.news_api import default_news, news_by_category, news_by_query
 from source_api.weather_api import default_weather, hourly_weather
-from source_api.finance_api import default_currencies
+from source_api.finance_api import default_currencies, currencies_by_query, currencies_list
 from source_api.media_api import music_by_query, video_by_query
 
 
@@ -25,6 +25,8 @@ help_text_ru = u'Вы работаете с Content Aggregator. Список д�
                u'Погода\n' \
                u'Погода почасовая\n' \
                u'Валюты\n' \
+               u'Валюты "запрос"' \
+               u'Валюты список' \
                u'Картинка "запрос"\n' \
                u'Гиф "запрос"\n' \
                u'Музыка "запрос"\n' \
@@ -34,19 +36,21 @@ help_text_ru = u'Вы работаете с Content Aggregator. Список д�
                u'Длина запроса должна быть от 1 до 255 символов'
 
 help_text_eng = 'You are dealing with Content Aggregator. List of available commands:\n' \
-               'News\n' \
-               'News "query"\n' \
-               'News "category" (politics, economics, incidents, sport, science, culture, religion)\n' \
-               'Weather\n' \
-               'Weather hourly\n' \
-               'Currencies\n' \
-               'Image "query"\n' \
-               'Gif "query"\n' \
-               'Music "query"\n' \
-               'Video "query"\n' \
-               'Change language\n' \
-               'Help\n' \
-               'Mind that request length should be from 1 up to 255 symbols'
+                'News\n' \
+                'News "query"\n' \
+                'News "category" (politics, economics, incidents, sport, science, culture, religion)\n' \
+                'Weather\n' \
+                'Weather hourly\n' \
+                'Currencies\n' \
+                'Currencies "query"\n' \
+                'Currencies list\n' \
+                'Image "query"\n' \
+                'Gif "query"\n' \
+                'Music "query"\n' \
+                'Video "query"\n' \
+                'Change language\n' \
+                'Help\n' \
+                'Mind that request length should be from 1 up to 255 symbols'
 
 help_text_dict = dict(ru=help_text_ru, eng=help_text_eng)
 
@@ -59,10 +63,10 @@ news_cats_dict = dict(ru=news_cats_dict_ru, eng=news_cats_dict_eng)
 
 
 stopwords_dict_eng = dict(help='help', news='news', weather='weather', hourly='hourly', currencies='currencies',
-                          music='music', video='video', locale='change language')
+                          list='list', music='music', video='video', locale='change language')
 
 stopwords_dict_ru = dict(help=u'помощь', news=u'новости', weather=u'погода', hourly=u'почасовая', currencies=u'валюты',
-                         music=u'музыка', video=u'видео', locale=u'смена языка')
+                         list=u'список', music=u'музыка', video=u'видео', locale=u'смена языка')
 
 stopwords_dict = dict(ru=stopwords_dict_ru, eng=stopwords_dict_eng)
 
@@ -80,6 +84,10 @@ unknown_req_message_dict = dict(ru=u'Неизвестный тип запрос�
 
 processing_err_message_dict = dict(ru=u'Ошибка в выполнении запроса',
                                    eng='Error in processing request')
+
+incorrect_currency_message = dict(ru=u'К сожалению, валюта "{}" не найдена. Попробуйте вызвать "валюты список" '
+                                     u'для получения списка доступных валют',
+                                  eng='Currency "{}" not found. Try "currencies list" to monitor available currencies')
 
 
 def parse_request(req, text, locale='ru'):
@@ -103,7 +111,7 @@ def parse_request(req, text, locale='ru'):
                     req.type = 'Query'
                     req.success = 0
                     req.response_text = quotes_message_dict[locale]
-                    req.error_message = 'incorrect query'
+                    req.error_message = 'empty query'
                     req.complete = send_plain_message(req.user_id, req.response_text)
                     answers_queue.put(req)
                     return
@@ -133,6 +141,7 @@ def parse_request(req, text, locale='ru'):
             return
         if sws['weather'] in text:
             req.category = 'Weather'
+            req.save = True
             if sws['hourly'] in text:
                 req.type = 'Hourly'
                 req.response_text = hourly_weather(locale=locale)
@@ -141,16 +150,41 @@ def parse_request(req, text, locale='ru'):
                 req.response_text = default_weather(locale=locale)
             req.success = 1
             req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
             answers_queue.put(req)
             return
         if sws['currencies'] in text:
             req.category = 'Finance'
-            req.type = 'Currencies'
-            req.response_text = default_currencies(locale=locale)
-            req.success = 1
-            req.complete = send_plain_message(req.user_id, req.response_text)
             req.save = True
+            if sws['list'] in text:
+                req.type = 'Currencies_list'
+                req.success = 1
+                req.response_text = currencies_list(locale=locale)
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+            if text.count('&quot;') == 2:
+                req.type = 'Currencies_query'
+                found = re.findall('&quot;([^"]*)&quot;', text)
+                if found is None or len(found) == 0 or found[0] == '':
+                    req.success = 0
+                    req.response_text = quotes_message_dict[locale]
+                    req.error_message = 'empty query'
+                    req.complete = send_plain_message(req.user_id, req.response_text)
+                    answers_queue.put(req)
+                    return
+                query = found[0]
+                req.success = 1
+                res = currencies_by_query(query, locale)
+                if res == '':
+                    res = incorrect_currency_message[locale].format(query)
+                req.response_text = res
+                req.complete = send_plain_message(req.user_id, req.response_text)
+                answers_queue.put(req)
+                return
+            req.type = 'Currencies'
+            req.success = 1
+            req.response_text = default_currencies(locale=locale)
+            req.complete = send_plain_message(req.user_id, req.response_text)
             answers_queue.put(req)
             return
         if sws['music'] in text:

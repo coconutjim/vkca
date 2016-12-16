@@ -116,7 +116,7 @@ print 2
 import config
 conn = config.MYSQL_POOL.get_connection()
 cursor = conn.cursor()
-query = "insert into Type (CategoryName, TypeName) values ('{}','{}')".format('Finance', 'Currencies_query')
+query = "insert into Type (CategoryName, TypeName) values ('{}','{}')".format('Finance', 'Currencies_list')
 #query = "update Type set TypeName = 'Economics' where CategoryName = 'News' and TypeName = 'Financial'"
 cursor.execute(query)
 conn.commit()
@@ -127,6 +127,7 @@ cursor.execute(query)
 print cursor.fetchall()
 conn.close()
 '''
+
 
 
 
