@@ -36,15 +36,18 @@ def default_news(locale='ru'):
 
 def news_by_query(query, locale='ru'):
     log("getting news '{}'...".format(query))
-    res = ''
+    raw = ''
     for k, v in categories.iteritems():
         response = requests.get(v)
         soup = Soup(response.text, features='lxml')
         for item in soup.find_all('item'):
-            title = item.find('title').text
-            description = item.find('description').text
-            if query in title.lower() or query in description.lower():
-                res += title + '\n'
+            raw += item.find('title').text + '\n'
+    raw = raw[:-1]
+    arr = set(translate_text(raw).split('\n') if locale == 'eng' else raw.split('\n'))
+    res = ''
+    for item in arr:
+        if query in item.lower():
+            res += item + '\n'
     if res == '':
         return ''
     res = res[:-1]
