@@ -16,8 +16,6 @@ class Request:
         if not isinstance(dt, datetime.datetime):
             raise ValueError('request constructor error: bad datetime')
         text = str(text)
-        if len(text) > MAX_REQUEST_LENGTH:
-            raise ValueError('request constructor error: bad text')
 
         self.user_id = user_id
         self.dt = dt

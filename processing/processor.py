@@ -32,10 +32,11 @@ help_text_ru = u'Вы работаете с Content Aggregator. Список д�
                u'Музыка "запрос"\n' \
                u'Видео "запрос"\n' \
                u'Смена языка\n' \
-               u'Помощь'
+               u'Помощь\n' \
+               u'Длина запроса должна быть от 1 до 255 символов'
 
 help_text_eng = 'You are dealing with Content Aggregator. List of available commands:\n' \
-               'News' \
+               'News\n' \
                'News "query"\n' \
                'News "category" (politics, economics, incidents, sport, science, culture, religion)\n' \
                'Weather"\n' \
@@ -49,7 +50,8 @@ help_text_eng = 'You are dealing with Content Aggregator. List of available comm
                'Music "query"\n' \
                'Video "query"\n' \
                'Change language\n' \
-               'Help'
+               'Help\n' \
+               'Mind that request length should be from 1 up to 255 symbols'
 
 
 news_cats_dict_eng = dict(politics='Politics', economics='Economics', incidents='Incidents', sport='Sport',
@@ -375,6 +377,7 @@ def process(req):
         user_exists = check_user_existence(conn, req.user_id)
         if not user_exists:
             save_user(conn, get_user_info(req.user_id, req.dt))
+            # pass
         else:
             locale = get_user_locale(conn, req.user_id)
     except Exception as e:
