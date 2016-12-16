@@ -25,8 +25,8 @@ help_text_ru = u'Вы работаете с Content Aggregator. Список д�
                u'Погода\n' \
                u'Погода почасовая\n' \
                u'Валюты\n' \
-               u'Валюты "запрос"' \
-               u'Валюты список' \
+               u'Валюты "запрос"\n' \
+               u'Валюты список\n' \
                u'Картинка "запрос"\n' \
                u'Гиф "запрос"\n' \
                u'Музыка "запрос"\n' \
@@ -92,40 +92,35 @@ incorrect_currency_message = dict(ru=u'К сожалению, валюта "{}" 
 
 def parse_request(req, text, locale='ru'):
     sws = stopwords_dict[locale]
+    req.category = 'Undefined'
+    req.type = 'Undefined'
+    req.save = True
+    req.success = 1
     try:
         if sws['help'] in text:
             req.category = 'Help'
             req.type = 'Help'
             req.response_text = help_text_dict[locale]
-            req.success = 1
             req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
             answers_queue.put(req)
             return
         if sws['news'] in text:
             req.category = 'News'
-            req.save = True
             if text.count('&quot;') == 2:
                 found = re.findall('&quot;([^"]*)&quot;', text)
                 if found is None or len(found) == 0 or found[0] == '':
                     req.type = 'Query'
-                    req.success = 0
-                    req.response_text = quotes_message_dict[locale]
-                    req.error_message = 'empty query'
-                    req.complete = send_plain_message(req.user_id, req.response_text)
-                    answers_queue.put(req)
+                    process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                     return
                 query = found[0]
                 cats_dict = news_cats_dict[locale]
                 if query in cats_dict:
                     req.type = cats_dict[query]
-                    req.success = 1
                     req.response_text = news_by_category(req.type, locale=locale)
                     req.complete = send_plain_message(req.user_id, req.response_text)
                     answers_queue.put(req)
                     return
                 req.type = 'Query'
-                req.success = 1
                 res = news_by_query(query, locale=locale)
                 if res == '':
                     res = not_found_message_dict[locale].format(query)
@@ -133,7 +128,6 @@ def parse_request(req, text, locale='ru'):
                 req.complete = send_plain_message(req.user_id, req.response_text)
                 answers_queue.put(req)
                 return
-
             req.type = 'All'
             req.response_text = default_news(locale=locale)
             req.complete = send_plain_message(req.user_id, req.response_text)
@@ -141,23 +135,19 @@ def parse_request(req, text, locale='ru'):
             return
         if sws['weather'] in text:
             req.category = 'Weather'
-            req.save = True
             if sws['hourly'] in text:
                 req.type = 'Hourly'
                 req.response_text = hourly_weather(locale=locale)
             else:
                 req.type = 'Next'
                 req.response_text = default_weather(locale=locale)
-            req.success = 1
             req.complete = send_plain_message(req.user_id, req.response_text)
             answers_queue.put(req)
             return
         if sws['currencies'] in text:
             req.category = 'Finance'
-            req.save = True
             if sws['list'] in text:
                 req.type = 'Currencies_list'
-                req.success = 1
                 req.response_text = currencies_list(locale=locale)
                 req.complete = send_plain_message(req.user_id, req.response_text)
                 answers_queue.put(req)
@@ -166,14 +156,9 @@ def parse_request(req, text, locale='ru'):
                 req.type = 'Currencies_query'
                 found = re.findall('&quot;([^"]*)&quot;', text)
                 if found is None or len(found) == 0 or found[0] == '':
-                    req.success = 0
-                    req.response_text = quotes_message_dict[locale]
-                    req.error_message = 'empty query'
-                    req.complete = send_plain_message(req.user_id, req.response_text)
-                    answers_queue.put(req)
+                    process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                     return
                 query = found[0]
-                req.success = 1
                 res = currencies_by_query(query, locale)
                 if res == '':
                     res = incorrect_currency_message[locale].format(query)
@@ -182,7 +167,6 @@ def parse_request(req, text, locale='ru'):
                 answers_queue.put(req)
                 return
             req.type = 'Currencies'
-            req.success = 1
             req.response_text = default_currencies(locale=locale)
             req.complete = send_plain_message(req.user_id, req.response_text)
             answers_queue.put(req)
@@ -190,24 +174,14 @@ def parse_request(req, text, locale='ru'):
         if sws['music'] in text:
             req.category = 'Music'
             req.type = 'Query'
-            req.save = True
             if text.count('&quot;') != 2:
-                req.success = 0
-                req.response_text = quotes_message_dict[locale]
-                req.error_message = 'incorrect query'
-                req.complete = send_plain_message(req.user_id, req.response_text)
-                answers_queue.put(req)
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'incorrect query')
                 return
             found = re.findall('&quot;([^"]*)&quot;', text)
             if found is None or len(found) == 0 or found[0] == '':
-                req.success = 0
-                req.response_text = quotes_message_dict[locale]
-                req.error_message = 'empty query'
-                req.complete = send_plain_message(req.user_id, req.response_text)
-                answers_queue.put(req)
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                 return
             query = found[0]
-            req.success = 1
             music = music_by_query(query)
             if music is None:
                 req.response_text = not_found_message_dict[locale].format(query)
@@ -220,24 +194,14 @@ def parse_request(req, text, locale='ru'):
         if sws['video'] in text:
             req.category = 'Video'
             req.type = 'Query'
-            req.save = True
             if text.count('&quot;') != 2:
-                req.success = 0
-                req.response_text = quotes_message_dict[locale]
-                req.error_message = 'incorrect query'
-                req.complete = send_plain_message(req.user_id, req.response_text)
-                answers_queue.put(req)
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'incorrect query')
                 return
             found = re.findall('&quot;([^"]*)&quot;', text)
             if found is None or len(found) == 0 or found[0] == '':
-                req.success = 0
-                req.response_text = quotes_message_dict[locale]
-                req.error_message = 'empty query'
-                req.complete = send_plain_message(req.user_id, req.response_text)
-                answers_queue.put(req)
+                process_unsuccessful_req(req, quotes_message_dict[locale], 'empty query')
                 return
             query = found[0]
-            req.success = 1
             video = video_by_query(query)
             if video is None:
                 req.response_text = not_found_message_dict[locale].format(query)
@@ -261,27 +225,22 @@ def parse_request(req, text, locale='ru'):
             req.category = 'Locale'
             req.type = 'Change'
             req.response_text = change_locale_message_dict[locale]
-            req.success = 1
             req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
             answers_queue.put(req)
             return
-        req.category = 'Undefined'
-        req.type = 'Undefined'
-        req.response_text = unknown_req_message_dict[locale]
-        req.success = 0
-        req.complete = send_plain_message(req.user_id, req.response_text)
-        req.error_message = 'undefined request'
-        req.save = True
-        answers_queue.put(req)
+        process_unsuccessful_req(req, unknown_req_message_dict[locale], 'undefined request')
     except Exception as e:
         log(str(e))
-        req.success = 0
-        req.error_message = 'error in processing request'
-        req.response_text = processing_err_message_dict[locale]
-        req.complete = send_plain_message(req.user_id, req.answer_text)
-        req.save = True
-        answers_queue.put(req)
+        process_unsuccessful_req(req, processing_err_message_dict[locale], 'error in processing request')
+
+
+def process_unsuccessful_req(req, response, err_mes):
+    req.save = True
+    req.success = 0
+    req.response_text = response
+    req.error_message = err_mes
+    req.complete = send_plain_message(req.user_id, req.response_text)
+    answers_queue.put(req)
 
 
 def process(req):
