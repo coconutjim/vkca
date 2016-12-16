@@ -6,6 +6,7 @@ import re
 from vk_api.sending import send_plain_message, send_message_music, send_message_video
 from source_api.news_api import default_news, news_by_category, news_by_query
 from source_api.weather_api import default_weather, hourly_weather
+from source_api.finance_api import default_currencies
 from source_api.media_api import music_by_query, video_by_query
 
 
@@ -23,10 +24,7 @@ help_text_ru = u'Вы работаете с Content Aggregator. Список д�
                u'Новости "категория" (политика, экономика, происшествия, спорт, наука, культура, религия)\n' \
                u'Погода\n' \
                u'Погода почасовая\n' \
-               u'Погода "город"\n' \
-               u'Финансы\n' \
-               u'Финансы "валюта"\n' \
-               u'Финансы "котировка"\n' \
+               u'Валюты\n' \
                u'Картинка "запрос"\n' \
                u'Гиф "запрос"\n' \
                u'Музыка "запрос"\n' \
@@ -41,10 +39,7 @@ help_text_eng = 'You are dealing with Content Aggregator. List of available comm
                'News "category" (politics, economics, incidents, sport, science, culture, religion)\n' \
                'Weather\n' \
                'Weather hourly\n' \
-               'Weather "city"\n' \
-               'Finance\n' \
-               'Finance "currency"\n' \
-               'Finance "stock"\n' \
+               'Currencies\n' \
                'Image "query"\n' \
                'Gif "query"\n' \
                'Music "query"\n' \
@@ -66,19 +61,6 @@ def parse_eng_request(req, text):
             req.category = 'Help'
             req.type = 'Help'
             req.response_text = help_text_eng
-            req.success = 1
-            req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
-            answers_queue.put(req)
-            return
-        if 'weather' in text:
-            req.category = 'Weather'
-            if 'hourly' in text:
-                req.type = 'Hourly'
-                req.response_text = hourly_weather(locale='eng')
-            else:
-                req.type = 'Next'
-                req.response_text = default_weather(locale='eng')
             req.success = 1
             req.complete = send_plain_message(req.user_id, req.response_text)
             req.save = True
@@ -119,6 +101,28 @@ def parse_eng_request(req, text):
             req.response_text = default_news(locale='eng')
 
             req.complete = send_plain_message(req.user_id, req.response_text)
+            answers_queue.put(req)
+            return
+        if 'weather' in text:
+            req.category = 'Weather'
+            if 'hourly' in text:
+                req.type = 'Hourly'
+                req.response_text = hourly_weather(locale='eng')
+            else:
+                req.type = 'Next'
+                req.response_text = default_weather(locale='eng')
+            req.success = 1
+            req.complete = send_plain_message(req.user_id, req.response_text)
+            req.save = True
+            answers_queue.put(req)
+            return
+        if 'currencies' in text:
+            req.category = 'Finance'
+            req.type = 'Currencies'
+            req.response_text = default_currencies(locale='eng')
+            req.success = 1
+            req.complete = send_plain_message(req.user_id, req.response_text)
+            req.save = True
             answers_queue.put(req)
             return
         if 'music' in text:
@@ -225,19 +229,6 @@ def parse_ru_request(req, text):
             req.save = True
             answers_queue.put(req)
             return
-        if u'погода' in text:
-            req.category = 'Weather'
-            if u'почасовая' in text:
-                req.type = 'Hourly'
-                req.response_text = hourly_weather()
-            else:
-                req.type = 'Next'
-                req.response_text = default_weather()
-            req.success = 1
-            req.complete = send_plain_message(req.user_id, req.response_text)
-            req.save = True
-            answers_queue.put(req)
-            return
         if u'новости' in text:
             req.category = 'News'
             req.save = True
@@ -274,6 +265,28 @@ def parse_ru_request(req, text):
             req.response_text = default_news()
 
             req.complete = send_plain_message(req.user_id, req.response_text)
+            answers_queue.put(req)
+            return
+        if u'погода' in text:
+            req.category = 'Weather'
+            if u'почасовая' in text:
+                req.type = 'Hourly'
+                req.response_text = hourly_weather()
+            else:
+                req.type = 'Next'
+                req.response_text = default_weather()
+            req.success = 1
+            req.complete = send_plain_message(req.user_id, req.response_text)
+            req.save = True
+            answers_queue.put(req)
+            return
+        if u'валюты' in text:
+            req.category = 'Finance'
+            req.type = 'Currencies'
+            req.response_text = default_currencies()
+            req.success = 1
+            req.complete = send_plain_message(req.user_id, req.response_text)
+            req.save = True
             answers_queue.put(req)
             return
         if u'музыка' in text:
